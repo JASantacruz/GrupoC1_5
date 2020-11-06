@@ -40,8 +40,10 @@ public class Principal {
 				}catch (IOException e) {
 					e.printStackTrace();
 				}
+				System.out.println("Se ha creado el laberinto correctamente.");
 				break;
 			case 2:
+				System.out.println("Por favor, escriba la ruta del archivo.");
 				ruta = TECLADO.nextLine();
 				try {
 					importarLaberinto(lab, ruta);
@@ -65,7 +67,7 @@ public class Principal {
 	}
 	
 	public static void mostrar_opciones(){
-		System.out.println("Elija una de las opciones:\n\n1) Crear una matriz.\n2) Importar una matriz.\n3)Salir.\n\n");
+		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3)Salir.\n\n");
 	}
 	
 	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Laberinto lab) throws IOException {
@@ -278,7 +280,7 @@ public class Principal {
 						}
 					}
 		lab.dispose();
-		File file = new File("laberintoFinal.jpg");
+		File file = new File("laberinto"+laberinto.getFilas()+"x"+laberinto.getColumnas()+".jpg");
 		ImageIO.write(img, "jpg", file);
 	}
 
@@ -302,7 +304,7 @@ public class Principal {
 		json1.put("cells",json2);
 		System.out.println(json1.toString());
 
-		try(PrintWriter puntoJson = new PrintWriter("laberintoFinalATope.json")){
+		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".jpg")){
 			puntoJson.println(json1);
 		}
 	}
