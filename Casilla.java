@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package MavenExample.Laberinto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,9 @@ public class Casilla {
 	public void setValor(int valor) {
 		this.valor = valor;
 	}
-
+	public Casilla() {
+		
+	}
 	public Casilla (int[] posicion) {
 		//Por ahora
 		set_valor(0);
