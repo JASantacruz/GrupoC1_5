@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package MavenExample.Laberinto;
 
 import java.util.*;
 import java.util.List;
@@ -11,10 +11,9 @@ import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
 
-public class Principal {
+public class Principal implements Constantes {
 	public static final Scanner TECLADO = new Scanner (System.in);
-
-	public static void main(String[] args) {
+	public static void main(String[] args) throws LaberintoIncorrectoException {
 		int n_filas=0, n_columnas=0, opcion=0;		
 		Casilla[][] matriz = null;
 		Laberinto lab = new Laberinto();
@@ -28,7 +27,7 @@ public class Principal {
 					if (opcion<1 || opcion>3) throw new IOException();
 					error=false;
 				}catch(Exception e) {
-					System.out.println("ERROR El valor introducido deber ser un número entero del 1 al 3.");
+					System.out.println("ERROR El valor introducido deber ser un nï¿½mero entero del 1 al 3.");
 					error=true;
 				}
 				TECLADO.nextLine();
@@ -46,8 +45,10 @@ public class Principal {
 				System.out.println("Por favor, escriba la ruta del archivo.");
 				ruta = TECLADO.nextLine();
 				try {
-					importarLaberinto(lab, ruta);
+					importarProblema(lab, ruta);
 					buscar_error(lab);
+					crear_imagen(lab);
+					anyadirAFrontera(lab);
 				}catch (FileNotFoundException e){
 					System.out.println("ERROR No se ha encontrado el archivo.");
 				}catch (LaberintoIncorrectoException e){
@@ -58,19 +59,17 @@ public class Principal {
 				System.out.println("Se ha importado correctamente el laberinto.");
 				break;
 			case 3:
-				System.out.println("¡Hasta pronto!");
+				System.out.println("ï¿½Hasta pronto!");
 				seguir=false;
 			}
 		}while(seguir);
-		
+	}
 
-	}
-	
 	public static void mostrar_opciones(){
-		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3)Salir.\n\n");
+		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3) Salir.\n\n");
 	}
-	
-	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Laberinto lab) throws IOException {
+
+	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Laberinto lab) throws IOException, LaberintoIncorrectoException {
 		n_filas=numero_filas_columnas("filas");	
 		n_columnas=numero_filas_columnas("columnas");
 		matriz = new Casilla[n_filas][n_columnas];
@@ -82,7 +81,9 @@ public class Principal {
 		System.out.println("\n\n\nResultado final:");
 		mostrar_matriz(lab);
 		crear_imagen(lab);
-		crear_json(lab);
+		crear_json_maze(lab);
+		buscar_error(lab);
+		anyadirAFrontera(lab);
 	}
 	public static void mostrar_matriz(Laberinto lab) {
 		for(int i=0; i<lab.getListaCasillas().length; i++) {
@@ -94,21 +95,20 @@ public class Principal {
 	public static int numero_filas_columnas (String filas_o_columnas) {
 		int numero=0;
 		boolean valido = false;
-		System.out.println("Introduzca el número de "+filas_o_columnas+" permitido.");
+		System.out.println("Introduzca el nï¿½mero de "+filas_o_columnas+" permitido.");
 		do{
 			try {				
 				numero=TECLADO.nextInt();
 				if(numero<1) throw new InputMismatchException();
 				valido=true;
 			}catch (InputMismatchException e) {
-				System.out.println("El tipo de entrada no ha sido válido. Intente otra vez.");
+				System.out.println("El tipo de entrada no ha sido vï¿½lido. Intente otra vez.");
 				valido=false;
 				TECLADO.nextLine();
 			}
 		}while(!valido);
 		return numero;
 	}
-
 	public static void algoritmo_wilson(Laberinto lab){
 		LinkedList<Casilla> casillas_elegidas = new LinkedList<Casilla>();
 		Stack<Casilla> camino_seguido = new Stack<Casilla>();
@@ -125,10 +125,11 @@ public class Principal {
 		int coordenada_i = aleatorio.nextInt(matriz.length);
 		int coordenada_j = aleatorio.nextInt(matriz[0].length);
 		casillas_elegidas.add(matriz[coordenada_i][coordenada_j]);
+
 	}
 	public static void elegir_posicion_inicio(LinkedList<Casilla> casillas_elegidas, Laberinto lab, Stack<Casilla> camino_seguido) {
 		Random aleatorio = new Random();
-		int coordenada_i, coordenada_j;
+		int coordenada_i, coordenada_j,aux=0;
 		Casilla casilla_candidata;
 		do {
 			coordenada_i = aleatorio.nextInt(lab.getListaCasillas().length);
@@ -136,6 +137,8 @@ public class Principal {
 			casilla_candidata = lab.getListaCasillas()[coordenada_i][coordenada_j];
 		}while (casillas_elegidas.contains(casilla_candidata));
 		camino_seguido.add(casilla_candidata);
+
+
 	}
 	public static void crear_camino(LinkedList<Casilla> casillas_elegidas, Laberinto lab, Stack<Casilla> camino_seguido) {
 		Random aleatorio = new Random(); 
@@ -170,7 +173,6 @@ public class Principal {
 		}
 
 	}
-
 	public static boolean proxima_direccion_es_posible(int proxima_direccion, Laberinto lab, Casilla actual, Casilla aux) {
 		int posicion[] = new int[2];
 		posicion = actual.get_posicion();
@@ -244,7 +246,6 @@ public class Principal {
 			break;
 		}
 	}
-
 	public static int cual_es_direccion_problematica(Casilla actual, Casilla problematica) {
 		int direccion_i, direccion_j;
 		direccion_i = actual.get_posicion()[0] - problematica.get_posicion()[0]; //arriba=-1, abajo=1
@@ -255,7 +256,6 @@ public class Principal {
 			return 1+direccion_i;
 		}
 	}
-
 	public static void crear_imagen(Laberinto laberinto) throws IOException {
 		int width = 500;
 		int height = 500;
@@ -283,8 +283,8 @@ public class Principal {
 		File file = new File("laberinto"+laberinto.getFilas()+"x"+laberinto.getColumnas()+".jpg");
 		ImageIO.write(img, "jpg", file);
 	}
-
-	public static void crear_json(Laberinto lab) throws FileNotFoundException {
+	@SuppressWarnings("unchecked")
+	public static void crear_json_maze(Laberinto lab) throws FileNotFoundException {
 		JSONObject json1 = new JSONObject();
 		JSONObject json2 = new JSONObject(); 
 		JSONObject json3;
@@ -302,13 +302,35 @@ public class Principal {
 		json1.put("mov", lab.getMove());
 		json1.put("id_mov", lab.getId_move());
 		json1.put("cells",json2);
-		System.out.println(json1.toString());
 
-		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".jpg")){
+		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json")){
 			puntoJson.println(json1);
 		}
 	}
-
+	public static void crearJson(Laberinto lab,LinkedList<Casilla> inicioFinal) throws FileNotFoundException {
+		JSONObject json = new JSONObject();
+		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".json")){
+			puntoJson.println(json);
+		}
+	}
+	@SuppressWarnings({ "unused", "unchecked" })
+	public static void importarProblema(Laberinto lab, String ruta) throws IOException, ParseException {
+		JSONObject json = null;
+		JSONParser jparse = new JSONParser();
+		String jason = "";
+		String linea,inicio,destino,rutaMaze;
+		File archivo = new File (ruta);
+		FileReader fr = new FileReader (archivo);
+		BufferedReader br = new BufferedReader(fr);
+		while ((linea = br.readLine()) != null) {
+			jason += linea;
+		}
+		json = (JSONObject)jparse.parse(jason);
+		inicio = (String)json.get("INITIAL"); 
+		destino = (String)json.get("OBJETIVE");
+		rutaMaze = (String)json.get("MAZE");
+		importarLaberinto(lab,rutaMaze);		
+	}
 	public static void importarLaberinto(Laberinto laberinto, String ruta) throws IOException, ParseException {
 		String jason = "";
 		int[]aux2 = new int[2];
@@ -317,20 +339,19 @@ public class Principal {
 		JSONObject json3 = null;
 		JSONParser jparse = new JSONParser();
 		String aux1 = "";
+
 		Casilla[][] listaCasillas;
 		boolean[] aux3 = new boolean[4];
 		String linea;
 		String aux4 = "";
-		
+
 		File archivo = new File (ruta);
 		FileReader fr = new FileReader (archivo);
 		BufferedReader br = new BufferedReader(fr);
 		while ((linea = br.readLine()) != null) {
-            jason += linea;
-        }
-		System.out.println(jason);
+			jason += linea;
+		}
 		json1 = (JSONObject)jparse.parse(jason);
-		System.out.println(json1.toString());
 		laberinto.setColumnas(((Long)json1.get("cols")).intValue());
 		laberinto.setFilas(((Long)json1.get("rows")).intValue());
 		laberinto.crearMatriz();
@@ -352,12 +373,12 @@ public class Principal {
 	public static boolean[] cambiarListToBoolean(JSONArray lista) {
 		boolean[] aux = new boolean[4];
 		System.out.println(lista.toString());
-		
+
 		aux[0] = (boolean) lista.get(0);
 		aux[1] = (boolean) lista.get(1);
 		aux[2] = (boolean) lista.get(2);
 		aux[3] = (boolean) lista.get(3);
-		
+
 		return aux;	
 	}
 	public static void buscar_error (Laberinto lab) throws LaberintoIncorrectoException{
@@ -367,7 +388,7 @@ public class Principal {
 					if (lab.getListaCasillas()[i][j].get_pared(0)
 							|| (lab.getListaCasillas()[i][j].get_pared(2) != lab.getListaCasillas()[i+1][j].get_pared(0))) 
 						throw new LaberintoIncorrectoException("["+i+","+j+"]");
-					
+
 					if (j==0) {
 						if ((lab.getListaCasillas()[i][j].get_pared(1) != lab.getListaCasillas()[i][j+1].get_pared(3))
 								||lab.getListaCasillas()[i][j].get_pared(3)) 
@@ -385,7 +406,7 @@ public class Principal {
 					if ((lab.getListaCasillas()[i][j].get_pared(0)!= lab.getListaCasillas()[i-1][j].get_pared(2))
 							|| lab.getListaCasillas()[i][j].get_pared(2)) 
 						throw new LaberintoIncorrectoException("["+i+","+j+"]");
-					
+
 					if (j==0) {
 						if ((lab.getListaCasillas()[i][j].get_pared(1) != lab.getListaCasillas()[i][j+1].get_pared(3))
 								||lab.getListaCasillas()[i][j].get_pared(3)) 
@@ -403,7 +424,7 @@ public class Principal {
 					if ((lab.getListaCasillas()[i][j].get_pared(0)!= lab.getListaCasillas()[i-1][j].get_pared(2))
 							|| (lab.getListaCasillas()[i][j].get_pared(2) != lab.getListaCasillas()[i+1][j].get_pared(0))) 
 						throw new LaberintoIncorrectoException("["+i+","+j+"]");
-					
+
 					if (j==0) {
 						if ((lab.getListaCasillas()[i][j].get_pared(1) != lab.getListaCasillas()[i][j+1].get_pared(3))
 								||lab.getListaCasillas()[i][j].get_pared(3))
@@ -421,5 +442,84 @@ public class Principal {
 			}
 		}
 	}
-	
+	public static void anyadirAFrontera(Laberinto lab) throws FileNotFoundException {
+		PriorityQueue<Nodo> frontera = new PriorityQueue<Nodo>();
+		LinkedList<Sucesor> sucesores = new LinkedList<Sucesor>();
+		Nodo aux;
+		Random aleatorio = new Random();
+		int fila,columna;
+		for(int i =0;i<10;i++) {
+			fila = aleatorio.nextInt(lab.getFilas());
+			columna = aleatorio.nextInt(lab.getColumnas());
+			aux = new Nodo();
+			aux.setEstado(lab.getListaCasillas()[fila][columna]);
+			frontera.add(aux);
+		}
+		for(int i=0;i<10;i++) {
+			aux = frontera.remove();
+			sucesores.add(crearSucesor(aux,lab));
+			System.out.println("("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+")"+aux.getID());
+		}
+		imprimirFrontera(sucesores,lab);
+	}
+	public static Sucesor crearSucesor(Nodo nodo,Laberinto lab) {
+		Sucesor s = new Sucesor(nodo.getEstado());
+		for(int i =0;i<nodo.getEstado().getParedes().length;i++) {
+			if(nodo.getEstado().get_pared(i)==true)
+				switch(i) {
+				case 0:
+					s.getMov().add(MOV_N);
+					s.getNodos().add(anyadirNodo(nodo, lab,MOV_N));
+					break;
+				case 1:
+					s.getMov().add(MOV_E);
+					s.getNodos().add(anyadirNodo(nodo, lab,MOV_E));
+					break;
+				case 2:
+					s.getMov().add(MOV_S);
+					s.getNodos().add(anyadirNodo(nodo, lab,MOV_S));
+					break;
+				case 3:
+					s.getMov().add(MOV_O);
+					s.getNodos().add(anyadirNodo(nodo, lab,MOV_O));
+					break;
+				}
+		}
+		return s;
+	}
+	public static Nodo anyadirNodo(Nodo nodo,Laberinto lab,String mov) {
+		Casilla aux = new Casilla();
+		Nodo hijo = new Nodo(nodo);
+		switch(mov) {
+		case MOV_N:
+			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]-1][nodo.getEstado().get_posicion()[1]];
+			hijo.setEstado(aux);
+			break;
+		case MOV_E:
+			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]][nodo.getEstado().get_posicion()[1]+1];
+			hijo.setEstado(aux);
+			break;
+		case MOV_S:
+			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]+1][nodo.getEstado().get_posicion()[1]];
+			hijo.setEstado(aux);
+			break;
+		case MOV_O:
+			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]][nodo.getEstado().get_posicion()[1]-1];
+			hijo.setEstado(aux);
+			break;
+		}
+		hijo.setAccion(mov);
+		hijo.setProfundidad(nodo.getProfundidad()+1);
+		hijo.setCosto(nodo.getCosto()+COSTE);
+		return hijo;
+	}
+	public static void imprimirFrontera(LinkedList<Sucesor> sucesores,Laberinto lab) throws FileNotFoundException {
+		Sucesor s;
+		try(PrintWriter puntoJson = new PrintWriter("Sucesores"+lab.getFilas()+"x"+lab.getColumnas()+".txt")){
+			while(!sucesores.isEmpty()) {
+				s=sucesores.remove();
+				puntoJson.println(s.toString());
+			}
+		}
+	}
 }
