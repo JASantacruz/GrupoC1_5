@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package Sesion1;
 
 public class LaberintoIncorrectoException extends Exception{
 

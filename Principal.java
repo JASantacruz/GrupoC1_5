@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package Sesion1;
 
 import java.util.*;
 import java.util.List;
@@ -14,7 +14,7 @@ import java.io.*;
 public class Principal {
 	public static final Scanner TECLADO = new Scanner (System.in);
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws LaberintoIncorrectoException {
 		int n_filas=0, n_columnas=0, opcion=0;		
 		Casilla[][] matriz = null;
 		Laberinto lab = new Laberinto();
@@ -62,15 +62,13 @@ public class Principal {
 				seguir=false;
 			}
 		}while(seguir);
-		
-
 	}
 	
 	public static void mostrar_opciones(){
-		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3)Salir.\n\n");
+		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3) Salir.\n\n");
 	}
 	
-	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Laberinto lab) throws IOException {
+	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Laberinto lab) throws IOException, LaberintoIncorrectoException {
 		n_filas=numero_filas_columnas("filas");	
 		n_columnas=numero_filas_columnas("columnas");
 		matriz = new Casilla[n_filas][n_columnas];
@@ -83,6 +81,7 @@ public class Principal {
 		mostrar_matriz(lab);
 		crear_imagen(lab);
 		crear_json(lab);
+		buscar_error(lab);
 	}
 	public static void mostrar_matriz(Laberinto lab) {
 		for(int i=0; i<lab.getListaCasillas().length; i++) {
@@ -284,6 +283,7 @@ public class Principal {
 		ImageIO.write(img, "jpg", file);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void crear_json(Laberinto lab) throws FileNotFoundException {
 		JSONObject json1 = new JSONObject();
 		JSONObject json2 = new JSONObject(); 
@@ -302,13 +302,12 @@ public class Principal {
 		json1.put("mov", lab.getMove());
 		json1.put("id_mov", lab.getId_move());
 		json1.put("cells",json2);
-		System.out.println(json1.toString());
 
-		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".jpg")){
+		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".json")){
 			puntoJson.println(json1);
 		}
 	}
-
+	@SuppressWarnings({ "unused", "unchecked" })
 	public static void importarLaberinto(Laberinto laberinto, String ruta) throws IOException, ParseException {
 		String jason = "";
 		int[]aux2 = new int[2];
@@ -317,6 +316,7 @@ public class Principal {
 		JSONObject json3 = null;
 		JSONParser jparse = new JSONParser();
 		String aux1 = "";
+		
 		Casilla[][] listaCasillas;
 		boolean[] aux3 = new boolean[4];
 		String linea;
@@ -328,9 +328,7 @@ public class Principal {
 		while ((linea = br.readLine()) != null) {
             jason += linea;
         }
-		System.out.println(jason);
 		json1 = (JSONObject)jparse.parse(jason);
-		System.out.println(json1.toString());
 		laberinto.setColumnas(((Long)json1.get("cols")).intValue());
 		laberinto.setFilas(((Long)json1.get("rows")).intValue());
 		laberinto.crearMatriz();
