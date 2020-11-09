@@ -15,25 +15,16 @@ public class Nodo implements Comparable <Nodo> {
 	public Nodo(){
 		this.id=count++;
 		this.valor = 0;
+		this.profundidad = 0;
 	}
 	
 	public Nodo(Nodo padre){
-		this.id=++count;
+		this.id=count++;
 		this.valor = 0;
+		this.profundidad = padre.getProfundidad()+1;
+		this.padre=padre;
 	}
 	
-	public Nodo(Casilla estado, int valor, int profundidad, int costo, int heuristica, String accion,
-			Nodo padre) {
-		super();
-		this.id=++count;
-		this.estado = estado;
-		this.valor = 0;
-		this.profundidad = profundidad;
-		this.costo = costo;
-		this.heuristica = heuristica;
-		this.accion = accion;
-		this.padre = padre;
-	}
 	
 	public int getID() {
 		return id;
