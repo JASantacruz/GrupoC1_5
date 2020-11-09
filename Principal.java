@@ -288,6 +288,7 @@ public class Principal implements Constantes {
 		JSONObject json1 = new JSONObject();
 		JSONObject json2 = new JSONObject(); 
 		JSONObject json3;
+		String aux = "laberinto"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json";
 		for(int i = 0;i<lab.getListaCasillas().length;i++) {
 			for(int j = 0;j<lab.getListaCasillas()[0].length;j++) {
 				json3 = new JSONObject(); 
@@ -303,12 +304,17 @@ public class Principal implements Constantes {
 		json1.put("id_mov", lab.getId_move());
 		json1.put("cells",json2);
 
-		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json")){
+		try(PrintWriter puntoJson = new PrintWriter(aux)){
 			puntoJson.println(json1);
 		}
+		crearJson(lab,aux);
 	}
-	public static void crearJson(Laberinto lab,LinkedList<Casilla> inicioFinal) throws FileNotFoundException {
+	@SuppressWarnings("unchecked")
+	public static void crearJson(Laberinto lab,String ruta) throws FileNotFoundException {
 		JSONObject json = new JSONObject();
+		json.put("INITIAL", "("+lab.getListaCasillas()[0][0].get_posicion()[0]+", "+lab.getListaCasillas()[0][0].get_posicion()[1]+")");
+		json.put("OBJETIVE", "("+lab.getListaCasillas()[lab.getListaCasillas().length-1][lab.getListaCasillas()[0].length-1].get_posicion()[0]+", "+lab.getListaCasillas()[lab.getListaCasillas().length-1][lab.getListaCasillas()[0].length-1].get_posicion()[1]+")");
+		json.put("MAZE", ruta);
 		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".json")){
 			puntoJson.println(json);
 		}
@@ -458,7 +464,6 @@ public class Principal implements Constantes {
 		for(int i=0;i<10;i++) {
 			aux = frontera.remove();
 			sucesores.add(crearSucesor(aux,lab));
-			System.out.println("("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+")"+aux.getID());
 		}
 		imprimirFrontera(sucesores,lab);
 	}
@@ -509,7 +514,7 @@ public class Principal implements Constantes {
 			break;
 		}
 		hijo.setAccion(mov);
-		hijo.setProfundidad(nodo.getProfundidad()+1);
+		//hijo.setProfundidad(nodo.getProfundidad()+1);
 		hijo.setCosto(nodo.getCosto()+COSTE);
 		return hijo;
 	}

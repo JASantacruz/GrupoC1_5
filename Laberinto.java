@@ -1,18 +1,27 @@
 package MavenExample.Laberinto;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class Laberinto {
+public class Laberinto implements Constantes {
 
 	private int columnas;
 	private int filas;
 	private int max_n;
-	private List<String>id_move;
-	private List<int[]>  move;
+	private List<String>id_move = new ArrayList();
+	private List<int[]>  move = new ArrayList();
 	private Casilla [][] listaCasillas;
 
 	public Laberinto() {
-
+		this.max_n = 4;
+		this.id_move.add(MOV_N);
+		this.id_move.add(MOV_E);
+		this.id_move.add(MOV_S);
+		this.id_move.add(MOV_O);
+		this.move.add(ARRIBA);
+		this.move.add(DERECHA);
+		this.move.add(ABAJO);
+		this.move.add(IZQUIERDA);
 	}
 
 	public Laberinto(int columnas, int filas, Casilla[][] listaCasillas) {
