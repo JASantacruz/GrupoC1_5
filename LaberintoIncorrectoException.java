@@ -1,4 +1,4 @@
-package MavenExample.Laberinto;
+package Practica_Laberinto;
 
 public class LaberintoIncorrectoException extends Exception{
 

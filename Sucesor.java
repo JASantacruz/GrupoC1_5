@@ -1,4 +1,4 @@
-package MavenExample.Laberinto;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,6 +11,9 @@ public class Sucesor {
 	private int coste;
 	private List<Nodo> nodos;
 	
+	public Sucesor() {
+		
+	}
 	
 	public Sucesor(Casilla estado) {
 		this.mov = new ArrayList<String>();

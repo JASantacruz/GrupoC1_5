@@ -1,7 +1,8 @@
-package MavenExample.Laberinto;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Laberinto implements Constantes {
 
@@ -84,12 +85,13 @@ public class Laberinto implements Constantes {
 		this.listaCasillas=new Casilla[filas][columnas];
 	}
 	public void inicializar_matriz(){
+		Random aleatorio = new Random();
 		int posicion[] = new int[2];
 		for (int i=0; i<listaCasillas.length; i++) {
 			for (int j=0; j<listaCasillas[0].length; j++) {
 				posicion[0]=i;
 				posicion[1]=j;
-				listaCasillas[i][j] = new Casilla(posicion);
+				listaCasillas[i][j] = new Casilla(posicion, aleatorio.nextInt(4));
 
 			}
 		}

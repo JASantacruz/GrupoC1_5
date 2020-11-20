@@ -1,4 +1,4 @@
-package MavenExample.Laberinto;
+package Practica_Laberinto;
 
 import java.util.*;
 import java.util.List;
@@ -324,7 +324,7 @@ public class Principal implements Constantes {
 		JSONObject json = null;
 		JSONParser jparse = new JSONParser();
 		String jason = "";
-		String linea,inicio,destino,rutaMaze;
+		String linea, rutaMaze, inicio, destino;
 		File archivo = new File (ruta);
 		FileReader fr = new FileReader (archivo);
 		BufferedReader br = new BufferedReader(fr);
@@ -525,6 +525,85 @@ public class Principal implements Constantes {
 				s=sucesores.remove();
 				puntoJson.println(s.toString());
 			}
+		}
+	}
+	public static int calcular_heuristica(Problema problema, Nodo nodo) {
+		//return Math.abs(actual.get_posicion()[0]-destino.get_posicion()[0]) + Math.abs(actual.get_posicion()[1]-destino.get_posicion()[1]);
+		return 0;
+	}
+	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad, String st) throws NoSolutionException {
+		LinkedList<Casilla> visitado = new LinkedList<Casilla>();
+		LinkedList<Nodo> hijos = new LinkedList<Nodo>();
+		LinkedList<Casilla> camino = new LinkedList<Casilla>();
+		PriorityQueue<Nodo> frontera = new PriorityQueue<Nodo>();
+		boolean solucion=false;
+		Nodo nodo = new Nodo();
+		nodo.setPadre(null);
+		nodo.setEstado(null/*problema.get_estado_inicial()*/);
+		nodo.setCosto(0);
+		nodo.setProfundidad(0);
+		nodo.setAccion(null);
+		nodo.setHeuristica(calcular_heuristica(problema, nodo));
+		nodo.setValor(calcular_valor(st, nodo));
+		frontera.add(nodo);
+		while(!frontera.isEmpty() && !solucion) {
+			nodo = frontera.poll();
+			if (/*problema.get_objetivo().equals(nodo.getEstado())*/nodo.getAccion().equals("ESTO ES UNA PRUEBA NO VALE")) {
+				solucion=true;
+			}else if(visitado.contains(nodo.getEstado()) && nodo.getProfundidad()<profundidad) {
+				visitado.add(nodo.getEstado());
+				expandir_nodo(problema, nodo, st, hijos);
+				while (!hijos.isEmpty()) {
+					frontera.add(hijos.poll());
+				}
+			}
+		}
+		if (solucion) {
+			while (nodo.getPadre()!=null) {
+				camino.add(nodo.getEstado());
+				nodo=nodo.getPadre();
+			}
+		}else throw new NoSolutionException();
+		return camino;
+		
+	}
+	public static int calcular_valor(String st, Nodo nodo) {
+		int valor=0;
+		switch (st) {
+		case "BREADTH":
+			valor=nodo.getID();
+				break;
+		case "DEPTH":
+			valor=nodo.getProfundidad();
+			valor*=-1;
+			break;
+		case "UNIFORM":
+			valor=nodo.getCosto();
+			break;
+		case "GREEDY":
+			valor=nodo.getHeuristica();
+			break;
+		case "A":
+			valor=nodo.getHeuristica()+nodo.getCosto();
+			break;
+		}
+		return valor;
+	}
+	public static void expandir_nodo (Problema problema, Nodo nodo, String st, LinkedList<Nodo> hijos){
+		LinkedList<Nodo> nodos = new LinkedList<Nodo>();
+		Sucesor sucesores = new Sucesor();
+		Nodo hijo;
+		//problema.sucesores(nodo.getEstado()--> ESTO ES LO DE CREAR SUCESOR PERO EN LA CLASE PROBLEMA
+		for (int i=0 ; i<sucesores.getNodos().size() ; i++) {
+			hijo = new Nodo();
+			hijo.setEstado(sucesores.getNodos().get(i).getEstado());
+			hijo.setPadre(nodo);
+			hijo.setAccion(sucesores.getMov().get(i));
+			hijo.setProfundidad(nodo.getProfundidad()+1);
+			hijo.setCosto(nodo.getCosto()+sucesores.getNodos().get(i).getEstado().getValor()+1);
+			hijo.setHeuristica(calcular_heuristica(problema, hijo));
+			hijo.setValor(calcular_valor(st, hijo));
+			nodos.add(hijo);
 		}
 	}
 }
