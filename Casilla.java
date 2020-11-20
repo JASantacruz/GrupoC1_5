@@ -1,4 +1,4 @@
-package MavenExample.Laberinto;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,9 +19,8 @@ public class Casilla {
 	public Casilla() {
 		
 	}
-	public Casilla (int[] posicion) {
-		//Por ahora
-		set_valor(0);
+	public Casilla (int[] posicion, int valor) {
+		set_valor(valor);
 		set_posicion(posicion);
 		paredes = new boolean[4];
 		for (int i=0; i<paredes.length; i++) {

@@ -1,4 +1,4 @@
-package MavenExample.Laberinto;
+package Practica_Laberinto;
 
 public class Nodo implements Comparable <Nodo> {
 	private static int count = 0;
@@ -93,7 +93,7 @@ public class Nodo implements Comparable <Nodo> {
 	@Override
 	public String toString() {
 		return "["+ getID() + "] [" + getCosto() + ", (" + getEstado().get_posicion()[0] + ", "+getEstado().get_posicion()[1]+"), " +getPadre().getID()+", " + getAccion()
-				+ ", " + getProfundidad() + ", "+ getHeuristica() + ", " + getValor() + "]";
+				+ ", " + getProfundidad() + ", "+ getHeuristica() + ", " + Math.abs(getValor()) + "]";
 	}
 
 	@Override
