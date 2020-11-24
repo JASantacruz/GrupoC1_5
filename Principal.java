@@ -7,6 +7,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import java.awt.image.BufferedImage;
 import java.awt.*;
 import java.io.*;
@@ -16,7 +17,7 @@ public class Principal implements Constantes {
 	public static void main(String[] args) throws LaberintoIncorrectoException {
 		int n_filas=0, n_columnas=0, opcion=0;		
 		Casilla[][] matriz = null;
-		Laberinto lab = new Laberinto();
+		Problema problema = new Problema();
 		boolean seguir = true, error=false;
 		String ruta;
 		do {
@@ -35,7 +36,7 @@ public class Principal implements Constantes {
 			switch(opcion) {
 			case 1:
 				try {
-					crear_matriz(n_filas, n_columnas, matriz, lab);
+					crear_matriz(n_filas, n_columnas, matriz, problema);
 				}catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -45,10 +46,9 @@ public class Principal implements Constantes {
 				System.out.println("Por favor, escriba la ruta del archivo.");
 				ruta = TECLADO.nextLine();
 				try {
-					importarProblema(lab, ruta);
-					buscar_error(lab);
-					crear_imagen(lab);
-					anyadirAFrontera(lab);
+					importarProblema(problema, ruta);
+					buscar_error(problema.getLaberinto());
+					crear_imagen(problema.getLaberinto());
 				}catch (FileNotFoundException e){
 					System.out.println("ERROR No se ha encontrado el archivo.");
 				}catch (LaberintoIncorrectoException e){
@@ -69,21 +69,20 @@ public class Principal implements Constantes {
 		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3) Salir.\n\n");
 	}
 
-	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Laberinto lab) throws IOException, LaberintoIncorrectoException {
+	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Problema problema) throws IOException, LaberintoIncorrectoException {
 		n_filas=numero_filas_columnas("filas");	
 		n_columnas=numero_filas_columnas("columnas");
 		matriz = new Casilla[n_filas][n_columnas];
-		lab.setListaCasillas(matriz);
-		lab.setColumnas(n_columnas);
-		lab.setFilas(n_filas);
-		lab.inicializar_matriz();
-		algoritmo_wilson(lab);
+		problema.getLaberinto().setListaCasillas(matriz);
+		problema.getLaberinto().setColumnas(n_columnas);
+		problema.getLaberinto().setFilas(n_filas);
+		problema.getLaberinto().inicializar_matriz();
+		algoritmo_wilson(problema.getLaberinto());
 		System.out.println("\n\n\nResultado final:");
-		mostrar_matriz(lab);
-		crear_imagen(lab);
-		crear_json_maze(lab);
-		buscar_error(lab);
-		anyadirAFrontera(lab);
+		mostrar_matriz(problema.getLaberinto());
+		crear_imagen(problema.getLaberinto());
+		crear_json_maze(problema.getLaberinto());
+		buscar_error(problema.getLaberinto());
 	}
 	public static void mostrar_matriz(Laberinto lab) {
 		for(int i=0; i<lab.getListaCasillas().length; i++) {
@@ -320,7 +319,7 @@ public class Principal implements Constantes {
 		}
 	}
 	@SuppressWarnings({ "unused", "unchecked" })
-	public static void importarProblema(Laberinto lab, String ruta) throws IOException, ParseException {
+	public static void importarProblema(Problema problema, String ruta) throws IOException, ParseException {
 		JSONObject json = null;
 		JSONParser jparse = new JSONParser();
 		String jason = "";
@@ -335,9 +334,9 @@ public class Principal implements Constantes {
 		inicio = (String)json.get("INITIAL"); 
 		destino = (String)json.get("OBJETIVE");
 		rutaMaze = (String)json.get("MAZE");
-		importarLaberinto(lab,rutaMaze);		
+		importarLaberinto(problema,rutaMaze,inicio,destino);		
 	}
-	public static void importarLaberinto(Laberinto laberinto, String ruta) throws IOException, ParseException {
+	public static void importarLaberinto(Problema problema, String ruta, String inicio, String destino) throws IOException, ParseException {
 		String jason = "";
 		int[]aux2 = new int[2];
 		JSONObject json1 = null;
@@ -358,24 +357,32 @@ public class Principal implements Constantes {
 			jason += linea;
 		}
 		json1 = (JSONObject)jparse.parse(jason);
-		laberinto.setColumnas(((Long)json1.get("cols")).intValue());
-		laberinto.setFilas(((Long)json1.get("rows")).intValue());
-		laberinto.crearMatriz();
-		laberinto.inicializar_matriz();
-		laberinto.setId_move((List<String>)json1.get("mov"));
-		laberinto.setMove((List<int[]>)json1.get("id_mov"));
-		laberinto.setMax_n(((Long)json1.get("max_n")).intValue());	
+		problema.getLaberinto().setColumnas(((Long)json1.get("cols")).intValue());
+		problema.getLaberinto().setFilas(((Long)json1.get("rows")).intValue());
+		problema.getLaberinto().crearMatriz();
+		problema.getLaberinto().inicializar_matriz();
+		problema.getLaberinto().setId_move((List<String>)json1.get("mov"));
+		problema.getLaberinto().setMove((List<int[]>)json1.get("id_mov"));
+		problema.getLaberinto().setMax_n(((Long)json1.get("max_n")).intValue());	
 		json2 = (JSONObject)json1.get("cells");		
-		for(int i = 0;i<laberinto.getListaCasillas().length;i++) {
-			for(int j = 0;j<laberinto.getListaCasillas()[0].length;j++) {
+		for(int i = 0;i<problema.getLaberinto().getListaCasillas().length;i++) {
+			for(int j = 0;j<problema.getLaberinto().getListaCasillas()[0].length;j++) {
 				aux1= "("+i+", "+j+")";
 				json3 = (JSONObject)json2.get(aux1);
-				laberinto.getListaCasillas()[i][j].setValor(((Long)json3.get("value")).intValue());
+				problema.getLaberinto().getListaCasillas()[i][j].setValor(((Long)json3.get("value")).intValue());
 				aux3= cambiarListToBoolean((JSONArray)json3.get("neighbors"));
-				laberinto.getListaCasillas()[i][j].setParedes(aux3);
+				problema.getLaberinto().getListaCasillas()[i][j].setParedes(aux3);
+				if(aux1.equals(inicio)) {
+					problema.getOrigen().setValor(((Long)json3.get("value")).intValue());
+					problema.getOrigen().setParedes(aux3);
+				}else if(aux1.equals(destino)) {
+					problema.getDestino().setValor(((Long)json3.get("value")).intValue());
+					problema.getDestino().setParedes(aux3);
+				}
 			}
 		}
 	}
+	
 	public static boolean[] cambiarListToBoolean(JSONArray lista) {
 		boolean[] aux = new boolean[4];
 		System.out.println(lista.toString());
@@ -448,76 +455,8 @@ public class Principal implements Constantes {
 			}
 		}
 	}
-	public static void anyadirAFrontera(Laberinto lab) throws FileNotFoundException {
-		PriorityQueue<Nodo> frontera = new PriorityQueue<Nodo>();
-		LinkedList<Sucesor> sucesores = new LinkedList<Sucesor>();
-		Nodo aux;
-		Random aleatorio = new Random();
-		int fila,columna;
-		for(int i =0;i<10;i++) {
-			fila = aleatorio.nextInt(lab.getFilas());
-			columna = aleatorio.nextInt(lab.getColumnas());
-			aux = new Nodo();
-			aux.setEstado(lab.getListaCasillas()[fila][columna]);
-			frontera.add(aux);
-		}
-		for(int i=0;i<10;i++) {
-			aux = frontera.remove();
-			sucesores.add(crearSucesor(aux,lab));
-		}
-		imprimirFrontera(sucesores,lab);
-	}
-	public static Sucesor crearSucesor(Nodo nodo,Laberinto lab) {
-		Sucesor s = new Sucesor(nodo.getEstado());
-		for(int i =0;i<nodo.getEstado().getParedes().length;i++) {
-			if(nodo.getEstado().get_pared(i)==true)
-				switch(i) {
-				case 0:
-					s.getMov().add(MOV_N);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_N));
-					break;
-				case 1:
-					s.getMov().add(MOV_E);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_E));
-					break;
-				case 2:
-					s.getMov().add(MOV_S);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_S));
-					break;
-				case 3:
-					s.getMov().add(MOV_O);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_O));
-					break;
-				}
-		}
-		return s;
-	}
-	public static Nodo anyadirNodo(Nodo nodo,Laberinto lab,String mov) {
-		Casilla aux = new Casilla();
-		Nodo hijo = new Nodo(nodo);
-		switch(mov) {
-		case MOV_N:
-			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]-1][nodo.getEstado().get_posicion()[1]];
-			hijo.setEstado(aux);
-			break;
-		case MOV_E:
-			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]][nodo.getEstado().get_posicion()[1]+1];
-			hijo.setEstado(aux);
-			break;
-		case MOV_S:
-			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]+1][nodo.getEstado().get_posicion()[1]];
-			hijo.setEstado(aux);
-			break;
-		case MOV_O:
-			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]][nodo.getEstado().get_posicion()[1]-1];
-			hijo.setEstado(aux);
-			break;
-		}
-		hijo.setAccion(mov);
-		//hijo.setProfundidad(nodo.getProfundidad()+1);
-		hijo.setCosto(nodo.getCosto()+COSTE);
-		return hijo;
-	}
+	
+	
 	public static void imprimirFrontera(LinkedList<Sucesor> sucesores,Laberinto lab) throws FileNotFoundException {
 		Sucesor s;
 		try(PrintWriter puntoJson = new PrintWriter("Sucesores"+lab.getFilas()+"x"+lab.getColumnas()+".txt")){
@@ -539,7 +478,7 @@ public class Principal implements Constantes {
 		boolean solucion=false;
 		Nodo nodo = new Nodo();
 		nodo.setPadre(null);
-		nodo.setEstado(null/*problema.get_estado_inicial()*/);
+		nodo.setEstado(problema.getOrigen());
 		nodo.setCosto(0);
 		nodo.setProfundidad(0);
 		nodo.setAccion(null);
@@ -548,7 +487,7 @@ public class Principal implements Constantes {
 		frontera.add(nodo);
 		while(!frontera.isEmpty() && !solucion) {
 			nodo = frontera.poll();
-			if (/*problema.get_objetivo().equals(nodo.getEstado())*/nodo.getAccion().equals("ESTO ES UNA PRUEBA NO VALE")) {
+			if (problema.getDestino().equals(nodo.getEstado())) {
 				solucion=true;
 			}else if(visitado.contains(nodo.getEstado()) && nodo.getProfundidad()<profundidad) {
 				visitado.add(nodo.getEstado());
@@ -593,7 +532,7 @@ public class Principal implements Constantes {
 		LinkedList<Nodo> nodos = new LinkedList<Nodo>();
 		Sucesor sucesores = new Sucesor();
 		Nodo hijo;
-		//problema.sucesores(nodo.getEstado()--> ESTO ES LO DE CREAR SUCESOR PERO EN LA CLASE PROBLEMA
+		sucesores = problema.crearSucesor(nodo, problema.getLaberinto());
 		for (int i=0 ; i<sucesores.getNodos().size() ; i++) {
 			hijo = new Nodo();
 			hijo.setEstado(sucesores.getNodos().get(i).getEstado());
