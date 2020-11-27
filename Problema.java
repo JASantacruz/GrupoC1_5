@@ -1,10 +1,11 @@
-package Practica_Laberinto;
+package Sesion1;
 
 public class Problema implements Constantes{
 
 	private Laberinto laberinto;
 	private Casilla origen;
 	private Casilla destino;
+	
 	public Problema() {
 
 	}
