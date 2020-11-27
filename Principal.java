@@ -19,7 +19,11 @@ public class Principal implements Constantes {
 		Casilla[][] matriz = null;
 		Problema problema = new Problema();
 		boolean seguir = true, error=false;
-		String ruta;
+		String ruta, estrategia="";
+		LinkedList<Casilla> casillas_solucion = new LinkedList<Casilla>();
+		LinkedList<Casilla> casillas_frontera = new LinkedList<Casilla>();
+		LinkedList<Casilla> casillas_visitadas = new LinkedList<Casilla>();
+		
 		do {
 			do {
 				mostrar_opciones();
@@ -49,6 +53,13 @@ public class Principal implements Constantes {
 					importarProblema(problema, ruta);
 					buscar_error(problema.getLaberinto());
 					crear_imagen(problema.getLaberinto());
+					estrategia = menu_estrategia();
+					while(!estrategia.equals("EXIT")) {
+						casillas_solucion = algoritmo_busqueda(problema, 1000000, estrategia, casillas_frontera, casillas_visitadas);
+						//pintar_laberinto_debug(casillas_solucion, casillas_frontera, casillas_visitadas);
+						estrategia = menu_estrategia();
+					}					
+
 				}catch (FileNotFoundException e){
 					System.out.println("ERROR No se ha encontrado el archivo.");
 				}catch (LaberintoIncorrectoException e){
@@ -467,10 +478,9 @@ public class Principal implements Constantes {
 		}
 	}
 	public static int calcular_heuristica(Problema problema, Nodo nodo) {
-		//return Math.abs(actual.get_posicion()[0]-destino.get_posicion()[0]) + Math.abs(actual.get_posicion()[1]-destino.get_posicion()[1]);
-		return 0;
+		return Math.abs(nodo.getEstado().get_posicion()[0]-problema.getDestino().get_posicion()[0]) + Math.abs(nodo.getEstado().get_posicion()[1]-problema.getDestino().get_posicion()[1]);
 	}
-	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad, String st) throws NoSolutionException {
+	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad, String st, LinkedList<Casilla> casillas_frontera, LinkedList<Casilla> casillas_visitadas) throws NoSolutionException {
 		LinkedList<Casilla> visitado = new LinkedList<Casilla>();
 		LinkedList<Nodo> hijos = new LinkedList<Nodo>();
 		LinkedList<Casilla> camino = new LinkedList<Casilla>();
@@ -485,12 +495,14 @@ public class Principal implements Constantes {
 		nodo.setHeuristica(calcular_heuristica(problema, nodo));
 		nodo.setValor(calcular_valor(st, nodo));
 		frontera.add(nodo);
+		if(!casillas_frontera.contains(nodo.getEstado())) casillas_frontera.add(nodo.getEstado());
 		while(!frontera.isEmpty() && !solucion) {
 			nodo = frontera.poll();
 			if (problema.getDestino().equals(nodo.getEstado())) {
 				solucion=true;
-			}else if(visitado.contains(nodo.getEstado()) && nodo.getProfundidad()<profundidad) {
+			}else if(!visitado.contains(nodo.getEstado()) && nodo.getProfundidad()<profundidad) {
 				visitado.add(nodo.getEstado());
+				casillas_frontera.remove(nodo.getEstado());
 				expandir_nodo(problema, nodo, st, hijos);
 				while (!hijos.isEmpty()) {
 					frontera.add(hijos.poll());
@@ -503,6 +515,7 @@ public class Principal implements Constantes {
 				nodo=nodo.getPadre();
 			}
 		}else throw new NoSolutionException();
+		casillas_visitadas=visitado;
 		return camino;
 		
 	}
@@ -543,6 +556,47 @@ public class Principal implements Constantes {
 			hijo.setHeuristica(calcular_heuristica(problema, hijo));
 			hijo.setValor(calcular_valor(st, hijo));
 			nodos.add(hijo);
+		}
+	}
+	public static void mostrar_opciones_estrategia() {
+		System.out.println("Por favor, elija una estrategia:\n");
+		System.out.println("1- Anchura.\n2- Profundidad acotada (1000000).\n3- Coste uniforme.\n4- Voraz.\n5- A*.\n6- Salir");
+	}
+	public static String menu_estrategia() {
+		int opcion;
+		String estrategia="";;
+		Scanner teclado = new Scanner (System.in);
+		boolean seguir = false;
+		do {
+			try {
+				mostrar_opciones_estrategia();
+				opcion = teclado.nextInt();
+				if (opcion<1 || opcion>6) throw new IOException();
+				estrategia = traducir_estrategia(opcion);
+			}catch (Exception e) {
+				System.out.println("El valor introducido debe ser un número entero entre el 1 y el 6.");
+				seguir = true;
+			}
+		}while (seguir);
+		return estrategia;
+	}
+	
+	public static String traducir_estrategia(int opcion) {
+		switch(opcion) {
+		case 1:
+			return "BREATH";
+		case 2:
+			return "DEPTH";
+		case 3:
+			return "UNIFORM";
+		case 4:
+			return "GREEDY";
+		case 5:
+			return "A";
+		case 6:
+			return "EXIT";
+		default:
+			return "";
 		}
 	}
 }
