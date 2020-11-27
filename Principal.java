@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package Sesion1;
 
 import java.util.*;
 import java.util.List;
@@ -9,7 +9,13 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorConvertOp;
 import java.awt.*;
+import java.awt.color.ColorSpace;
+import java.awt.geom.AffineTransform;
+import java.awt.geom.PathIterator;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.io.*;
 
 public class Principal implements Constantes {
@@ -73,10 +79,15 @@ public class Principal implements Constantes {
 		n_filas=numero_filas_columnas("filas");	
 		n_columnas=numero_filas_columnas("columnas");
 		matriz = new Casilla[n_filas][n_columnas];
+
+		problema.setLaberinto(new Laberinto());
+
+
 		problema.getLaberinto().setListaCasillas(matriz);
 		problema.getLaberinto().setColumnas(n_columnas);
 		problema.getLaberinto().setFilas(n_filas);
 		problema.getLaberinto().inicializar_matriz();
+
 		algoritmo_wilson(problema.getLaberinto());
 		System.out.println("\n\n\nResultado final:");
 		mostrar_matriz(problema.getLaberinto());
@@ -265,10 +276,29 @@ public class Principal implements Constantes {
 		lab.setColor(Color.white);
 		lab.fillRect(1, 1, width-2, height-2); //Para que el grosor de cada borde sea de 1 px
 		lab.setColor(Color.black);
-		for(int i = 0; i < laberinto.getFilas(); i++) 
-			for(int j = 0; j < laberinto.getColumnas(); j++) 
+		for(int i = 0; i < laberinto.getFilas(); i++) {
+			for(int j = 0; j < laberinto.getColumnas(); j++) {
+				switch(laberinto.getListaCasillas()[i][j].getValor()) {
+				case 0:
+					lab.setColor(new Color(184, 184, 184));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				case 1:
+					lab.setColor(new Color(192, 128, 128));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				case 2:
+					lab.setColor(new Color(128, 192, 128));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				case 3:
+					lab.setColor(new Color(128, 128, 192));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				}
 				for(int k = 0; k < 4; k++) 
 					if(laberinto.getListaCasillas()[i][j].get_pared(k)==false) {
+						lab.setColor(Color.black);
 						switch(k) {
 						case 0:
 							lab.drawLine(j*ancho_casilla, i*alto_casilla, (j*ancho_casilla)+ancho_casilla, i*alto_casilla); //pinta arriba
@@ -276,8 +306,16 @@ public class Principal implements Constantes {
 						case 1:
 							lab.drawLine((j*ancho_casilla)+ancho_casilla, i*alto_casilla, (j*ancho_casilla)+ancho_casilla, (i*alto_casilla)+alto_casilla); //pinta derecha
 							break;
+						case 2:
+							lab.drawLine((j*ancho_casilla)+ancho_casilla, (i*alto_casilla)+alto_casilla, j*ancho_casilla, (i*alto_casilla)+alto_casilla); //pinta abajo
+							break;
+						case 3:
+							lab.drawLine(j*ancho_casilla, (i*alto_casilla)+alto_casilla, j*ancho_casilla, i*alto_casilla); //pinta derecha
+							break;
 						}
 					}
+			}
+		}
 		lab.dispose();
 		File file = new File("laberinto"+laberinto.getFilas()+"x"+laberinto.getColumnas()+".jpg");
 		ImageIO.write(img, "jpg", file);
@@ -382,7 +420,7 @@ public class Principal implements Constantes {
 			}
 		}
 	}
-	
+
 	public static boolean[] cambiarListToBoolean(JSONArray lista) {
 		boolean[] aux = new boolean[4];
 		System.out.println(lista.toString());
@@ -455,8 +493,8 @@ public class Principal implements Constantes {
 			}
 		}
 	}
-	
-	
+
+
 	public static void imprimirFrontera(LinkedList<Sucesor> sucesores,Laberinto lab) throws FileNotFoundException {
 		Sucesor s;
 		try(PrintWriter puntoJson = new PrintWriter("Sucesores"+lab.getFilas()+"x"+lab.getColumnas()+".txt")){
@@ -504,14 +542,14 @@ public class Principal implements Constantes {
 			}
 		}else throw new NoSolutionException();
 		return camino;
-		
+
 	}
 	public static int calcular_valor(String st, Nodo nodo) {
 		int valor=0;
 		switch (st) {
 		case "BREADTH":
 			valor=nodo.getID();
-				break;
+			break;
 		case "DEPTH":
 			valor=nodo.getProfundidad();
 			valor*=-1;
