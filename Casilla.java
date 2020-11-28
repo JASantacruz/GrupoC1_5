@@ -1,4 +1,4 @@
-package Sesion1;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,12 +68,7 @@ public class Casilla {
 	}
 	
 	public boolean equals(Casilla casilla) {
-		if(casilla.get_posicion()==get_posicion()) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return casilla.get_posicion()[0]==get_posicion()[0] && casilla.get_posicion()[1]==get_posicion()[1];
 	}
 	
 	public List<Boolean> cambiarArrayALista() {
