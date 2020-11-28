@@ -1,4 +1,4 @@
-package Sesion1;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
 import java.util.Arrays;
