@@ -1,4 +1,4 @@
-package Sesion1;
+package Practica_Laberinto;
 
 public class Nodo implements Comparable <Nodo> {
 	private static int count = 0;
