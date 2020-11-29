@@ -1,4 +1,4 @@
-package Sesion1;
+package Practica_Laberinto;
 
 import java.util.*;
 import java.util.List;
@@ -9,14 +9,10 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import java.awt.image.BufferedImage;
-import java.awt.image.ColorConvertOp;
 import java.awt.*;
-import java.awt.color.ColorSpace;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.PathIterator;
-import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.io.*;
+
+@SuppressWarnings({"unused", "unchecked", "resource", "static-access"})
 
 public class Principal implements Constantes {
 	public static final Scanner TECLADO = new Scanner (System.in);
@@ -25,7 +21,11 @@ public class Principal implements Constantes {
 		Casilla[][] matriz = null;
 		Problema problema = new Problema();
 		boolean seguir = true, error=false;
-		String ruta;
+		String ruta, estrategia="";
+		LinkedList<Casilla> casillas_solucion = new LinkedList<Casilla>();
+		LinkedList<Casilla> casillas_frontera = new LinkedList<Casilla>();
+		LinkedList<Casilla> casillas_visitadas = new LinkedList<Casilla>();
+
 		do {
 			do {
 				mostrar_opciones();
@@ -34,7 +34,7 @@ public class Principal implements Constantes {
 					if (opcion<1 || opcion>3) throw new IOException();
 					error=false;
 				}catch(Exception e) {
-					System.out.println("ERROR El valor introducido deber ser un n�mero entero del 1 al 3.");
+					System.out.println("ERROR El valor introducido deber ser un numero entero del 1 al 3.");
 					error=true;
 				}
 				TECLADO.nextLine();
@@ -53,19 +53,31 @@ public class Principal implements Constantes {
 				ruta = TECLADO.nextLine();
 				try {
 					importarProblema(problema, ruta);
+					System.out.println("Se ha importado correctamente el laberinto.");
 					buscar_error(problema.getLaberinto());
 					crear_imagen(problema.getLaberinto());
-				}catch (FileNotFoundException e){
-					System.out.println("ERROR No se ha encontrado el archivo.");
+					estrategia = menu_estrategia();
+					while(!estrategia.equals("EXIT")) {
+						casillas_solucion = algoritmo_busqueda(problema, 1000000, estrategia, casillas_frontera, casillas_visitadas);
+						pintar_laberinto_debug(casillas_solucion, casillas_frontera, casillas_visitadas, problema.getLaberinto(), estrategia);
+						casillas_frontera = new LinkedList<Casilla>();
+						casillas_solucion = new LinkedList<Casilla>();
+						casillas_visitadas = new LinkedList<Casilla>();
+
+						estrategia = menu_estrategia();
+					}					
 				}catch (LaberintoIncorrectoException e){
 					System.out.println("ERROR "+e.getMessage());
-				}catch (Exception e) {
-					System.out.println("ERROR");
+				}catch(NoSolutionException e) {
+					System.out.println("ERROR "+e.getMessage());
+				}catch(IOException e) {
+					System.out.println("ERROR "+e.getMessage());
+				}catch(ParseException e) {
+					e.printStackTrace();
 				}
-				System.out.println("Se ha importado correctamente el laberinto.");
 				break;
 			case 3:
-				System.out.println("�Hasta pronto!");
+				System.out.println("Hasta pronto!");
 				seguir=false;
 			}
 		}while(seguir);
@@ -74,7 +86,65 @@ public class Principal implements Constantes {
 	public static void mostrar_opciones(){
 		System.out.println("Elija una de las opciones:\n\n1) Crear un laberinto.\n2) Importar un laberinto.\n3) Salir.\n\n");
 	}
-
+	public static void mostrar_opciones_estrategia() {
+		System.out.println("Por favor, elija una estrategia:\n");
+		System.out.println("1- Anchura.\n2- Profundidad acotada (1000000).\n3- Coste uniforme.\n4- Voraz.\n5- A*.\n6- Salir");
+	}
+	
+	public static String menu_estrategia() {
+		int opcion;
+		String estrategia="";
+		boolean seguir = false;
+		do {
+			try {
+				mostrar_opciones_estrategia();
+				opcion = TECLADO.nextInt();
+				if (opcion<1 || opcion>6) throw new IOException();
+				estrategia = traducir_estrategia(opcion);
+			}catch (Exception e) {
+				System.out.println("El valor introducido debe ser un numero entero entre el 1 y el 6.");
+				seguir = true;
+			}
+		}while (seguir);
+		return estrategia;
+	}
+	public static String traducir_estrategia(int opcion) {
+		switch(opcion) {
+		case 1:
+			return "BREATH";
+		case 2:
+			return "DEPTH";
+		case 3:
+			return "UNIFORM";
+		case 4:
+			return "GREEDY";
+		case 5:
+			return "A";
+		case 6:
+			return "EXIT";
+		default:
+			return "";
+		}
+	}
+	
+	public static int numero_filas_columnas (String filas_o_columnas) {
+		int numero=0;
+		boolean valido = false;
+		System.out.println("Introduzca el numero de "+filas_o_columnas+" permitido.");
+		do{
+			try {				
+				numero=TECLADO.nextInt();
+				if(numero<1) throw new InputMismatchException();
+				valido=true;
+			}catch (InputMismatchException e) {
+				System.out.println("El tipo de entrada no ha sido valido. Intente otra vez.");
+				valido=false;
+				TECLADO.nextLine();
+			}
+		}while(!valido);
+		return numero;
+	}
+	
 	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Problema problema) throws IOException, LaberintoIncorrectoException {
 		n_filas=numero_filas_columnas("filas");	
 		n_columnas=numero_filas_columnas("columnas");
@@ -82,42 +152,14 @@ public class Principal implements Constantes {
 
 		problema.setLaberinto(new Laberinto());
 
-
 		problema.getLaberinto().setListaCasillas(matriz);
 		problema.getLaberinto().setColumnas(n_columnas);
 		problema.getLaberinto().setFilas(n_filas);
 		problema.getLaberinto().inicializar_matriz();
-
 		algoritmo_wilson(problema.getLaberinto());
-		System.out.println("\n\n\nResultado final:");
-		mostrar_matriz(problema.getLaberinto());
 		crear_imagen(problema.getLaberinto());
 		crear_json_maze(problema.getLaberinto());
 		buscar_error(problema.getLaberinto());
-	}
-	public static void mostrar_matriz(Laberinto lab) {
-		for(int i=0; i<lab.getListaCasillas().length; i++) {
-			for(int j=0; j<lab.getListaCasillas()[0].length; j++) {
-				System.out.println(lab.getListaCasillas()[i][j].toString());
-			}
-		}
-	}
-	public static int numero_filas_columnas (String filas_o_columnas) {
-		int numero=0;
-		boolean valido = false;
-		System.out.println("Introduzca el n�mero de "+filas_o_columnas+" permitido.");
-		do{
-			try {				
-				numero=TECLADO.nextInt();
-				if(numero<1) throw new InputMismatchException();
-				valido=true;
-			}catch (InputMismatchException e) {
-				System.out.println("El tipo de entrada no ha sido v�lido. Intente otra vez.");
-				valido=false;
-				TECLADO.nextLine();
-			}
-		}while(!valido);
-		return numero;
 	}
 	public static void algoritmo_wilson(Laberinto lab){
 		LinkedList<Casilla> casillas_elegidas = new LinkedList<Casilla>();
@@ -266,11 +308,12 @@ public class Principal implements Constantes {
 			return 1+direccion_i;
 		}
 	}
+	
 	public static void crear_imagen(Laberinto laberinto) throws IOException {
-		int width = 500;
-		int height = 500;
-		int alto_casilla = height / laberinto.getFilas(); //Alto de cada casilla
-		int ancho_casilla = width / laberinto.getColumnas(); //Ancho de cada casilla
+		int alto_casilla = 20; //Alto de cada casilla
+		int ancho_casilla = 20; //Ancho de cada casilla
+		int width = ancho_casilla*laberinto.getColumnas();
+		int height = alto_casilla*laberinto.getFilas();
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D lab = img.createGraphics();
 		lab.setColor(Color.white);
@@ -320,11 +363,91 @@ public class Principal implements Constantes {
 		File file = new File("laberinto"+laberinto.getFilas()+"x"+laberinto.getColumnas()+".jpg");
 		ImageIO.write(img, "jpg", file);
 	}
-	@SuppressWarnings("unchecked")
+	private static void pintar_laberinto_debug(LinkedList<Casilla> casillas_solucion, LinkedList<Casilla> casillas_frontera, LinkedList<Casilla> casillas_visitadas, Laberinto laberinto, String estrategia) throws IOException {
+		int alto_casilla = 20; //Alto de cada casilla
+		int ancho_casilla = 20; //Ancho de cada casilla
+		int width = ancho_casilla*laberinto.getColumnas();
+		int height = alto_casilla*laberinto.getFilas();
+		
+		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+		Graphics2D lab = img.createGraphics();
+		lab.setColor(Color.white);
+		lab.fillRect(1, 1, width-2, height-2); //Para que el grosor de cada borde sea de 1 px
+		for(int i = 0; i < laberinto.getFilas(); i++) {
+			for(int j = 0; j < laberinto.getColumnas(); j++) {
+				switch(laberinto.getListaCasillas()[i][j].getValor()) {
+				case 0:
+					lab.setColor(new Color(184, 184, 184));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				case 1:
+					lab.setColor(new Color(192, 128, 128));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				case 2:
+					lab.setColor(new Color(128, 192, 128));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				case 3:
+					lab.setColor(new Color(128, 128, 192));
+					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
+					break;
+				}
+			}
+		}
+		for(int i = 0; i < casillas_frontera.size(); i++) {
+			int[] pos = casillas_frontera.get(i).get_posicion();
+			lab.setColor(Color.blue);
+			lab.fillRect(pos[1]*ancho_casilla, pos[0]*alto_casilla, ancho_casilla, alto_casilla);
+		}
+
+		for(int i = 0; i < casillas_visitadas.size(); i++) {
+			int[] pos = casillas_visitadas.get(i).get_posicion();
+			lab.setColor(Color.green);
+			lab.fillRect(pos[1]*ancho_casilla, pos[0]*alto_casilla, ancho_casilla, alto_casilla);
+		}
+
+
+		for(int i = 0; i < casillas_solucion.size(); i++) {
+			int[] pos = casillas_solucion.get(i).get_posicion();
+			lab.setColor(Color.red);
+			lab.fillRect(pos[1]*ancho_casilla, pos[0]*alto_casilla, ancho_casilla, alto_casilla);
+		}
+
+		for(int i = 0; i < laberinto.getFilas(); i++) {
+			for(int j = 0; j < laberinto.getColumnas(); j++) {
+				for(int k = 0; k < 4; k++) 
+					if(laberinto.getListaCasillas()[i][j].get_pared(k)==false) {
+						lab.setColor(Color.black);
+						switch(k) {
+						case 0:
+							lab.drawLine(j*ancho_casilla, i*alto_casilla, (j*ancho_casilla)+ancho_casilla, i*alto_casilla); //pinta arriba
+							break;
+						case 1:
+							lab.drawLine((j*ancho_casilla)+ancho_casilla, i*alto_casilla, (j*ancho_casilla)+ancho_casilla, (i*alto_casilla)+alto_casilla); //pinta derecha
+							break;
+						case 2:
+							lab.drawLine((j*ancho_casilla)+ancho_casilla, (i*alto_casilla)+alto_casilla, j*ancho_casilla, (i*alto_casilla)+alto_casilla); //pinta abajo
+							break;
+						case 3:
+							lab.drawLine(j*ancho_casilla, (i*alto_casilla)+alto_casilla, j*ancho_casilla, i*alto_casilla); //pinta derecha
+							break;
+						}
+					}
+			}
+		}
+
+		lab.dispose();
+		File file = new File("solution_"+laberinto.getFilas()+"x"+laberinto.getColumnas()+"_"+estrategia+".jpg");
+		ImageIO.write(img, "jpg", file);
+	}
+
+
 	public static void crear_json_maze(Laberinto lab) throws FileNotFoundException {
 		JSONObject json1 = new JSONObject();
 		JSONObject json2 = new JSONObject(); 
 		JSONObject json3;
+		LinkedList<LinkedList<Integer>>auxiliar = new LinkedList<LinkedList<Integer>>();
 		String aux = "laberinto"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json";
 		for(int i = 0;i<lab.getListaCasillas().length;i++) {
 			for(int j = 0;j<lab.getListaCasillas()[0].length;j++) {
@@ -336,8 +459,14 @@ public class Principal implements Constantes {
 		}
 		json1.put("rows", lab.getFilas());
 		json1.put("cols", lab.getColumnas());
-		json1.put("max_n", lab.getMax_n());
-		json1.put("mov", lab.getMove());
+		json1.put("max_n", lab.getMax_n());		
+		for (int i=0; i<lab.getMove().size(); i++) {
+			LinkedList<Integer> lista_auxiliar = new LinkedList<Integer>();
+			lista_auxiliar.add(lab.getMove().get(i)[0]);
+			lista_auxiliar.add(lab.getMove().get(i)[1]);
+			auxiliar.add(lista_auxiliar);
+		}
+		json1.put("mov", auxiliar);
 		json1.put("id_mov", lab.getId_move());
 		json1.put("cells",json2);
 
@@ -346,7 +475,6 @@ public class Principal implements Constantes {
 		}
 		crearJson(lab,aux);
 	}
-	@SuppressWarnings("unchecked")
 	public static void crearJson(Laberinto lab,String ruta) throws FileNotFoundException {
 		JSONObject json = new JSONObject();
 		json.put("INITIAL", "("+lab.getListaCasillas()[0][0].get_posicion()[0]+", "+lab.getListaCasillas()[0][0].get_posicion()[1]+")");
@@ -356,7 +484,7 @@ public class Principal implements Constantes {
 			puntoJson.println(json);
 		}
 	}
-	@SuppressWarnings({ "unused", "unchecked" })
+
 	public static void importarProblema(Problema problema, String ruta) throws IOException, ParseException {
 		JSONObject json = null;
 		JSONParser jparse = new JSONParser();
@@ -401,8 +529,8 @@ public class Principal implements Constantes {
 		problema.getLaberinto().inicializar_matriz();
 		problema.getLaberinto().setId_move((List<String>)json1.get("mov"));
 		problema.getLaberinto().setMove((List<int[]>)json1.get("id_mov"));
-		problema.getLaberinto().setMax_n(((Long)json1.get("max_n")).intValue());	
-		json2 = (JSONObject)json1.get("cells");		
+		problema.getLaberinto().setMax_n(((Long)json1.get("max_n")).intValue());
+		json2 = (JSONObject)json1.get("cells");
 		for(int i = 0;i<problema.getLaberinto().getListaCasillas().length;i++) {
 			for(int j = 0;j<problema.getLaberinto().getListaCasillas()[0].length;j++) {
 				aux1= "("+i+", "+j+")";
@@ -413,9 +541,15 @@ public class Principal implements Constantes {
 				if(aux1.equals(inicio)) {
 					problema.getOrigen().setValor(((Long)json3.get("value")).intValue());
 					problema.getOrigen().setParedes(aux3);
+					aux2[0]=i;
+					aux2[1]=j;
+					problema.getOrigen().set_posicion(aux2);
 				}else if(aux1.equals(destino)) {
 					problema.getDestino().setValor(((Long)json3.get("value")).intValue());
 					problema.getDestino().setParedes(aux3);
+					aux2[0]=i;
+					aux2[1]=j;
+					problema.getDestino().set_posicion(aux2);
 				}
 			}
 		}
@@ -423,7 +557,6 @@ public class Principal implements Constantes {
 
 	public static boolean[] cambiarListToBoolean(JSONArray lista) {
 		boolean[] aux = new boolean[4];
-		System.out.println(lista.toString());
 
 		aux[0] = (boolean) lista.get(0);
 		aux[1] = (boolean) lista.get(1);
@@ -494,26 +627,17 @@ public class Principal implements Constantes {
 		}
 	}
 
-
-	public static void imprimirFrontera(LinkedList<Sucesor> sucesores,Laberinto lab) throws FileNotFoundException {
-		Sucesor s;
-		try(PrintWriter puntoJson = new PrintWriter("Sucesores"+lab.getFilas()+"x"+lab.getColumnas()+".txt")){
-			while(!sucesores.isEmpty()) {
-				s=sucesores.remove();
-				puntoJson.println(s.toString());
-			}
-		}
-	}
 	public static int calcular_heuristica(Problema problema, Nodo nodo) {
-		//return Math.abs(actual.get_posicion()[0]-destino.get_posicion()[0]) + Math.abs(actual.get_posicion()[1]-destino.get_posicion()[1]);
-		return 0;
+		return Math.abs(nodo.getEstado().get_posicion()[0]-problema.getDestino().get_posicion()[0]) + Math.abs(nodo.getEstado().get_posicion()[1]-problema.getDestino().get_posicion()[1]);
 	}
-	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad, String st) throws NoSolutionException {
-		LinkedList<Casilla> visitado = new LinkedList<Casilla>();
+	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad_max, String st, LinkedList<Casilla> casillas_frontera, LinkedList<Casilla> casillas_visitadas) throws NoSolutionException {
+
 		LinkedList<Nodo> hijos = new LinkedList<Nodo>();
 		LinkedList<Casilla> camino = new LinkedList<Casilla>();
 		PriorityQueue<Nodo> frontera = new PriorityQueue<Nodo>();
+
 		boolean solucion=false;
+
 		Nodo nodo = new Nodo();
 		nodo.setPadre(null);
 		nodo.setEstado(problema.getOrigen());
@@ -521,30 +645,38 @@ public class Principal implements Constantes {
 		nodo.setProfundidad(0);
 		nodo.setAccion(null);
 		nodo.setHeuristica(calcular_heuristica(problema, nodo));
-		nodo.setValor(calcular_valor(st, nodo));
+		nodo.setValor(calcular_valor(st, nodo, profundidad_max));
+
 		frontera.add(nodo);
+
 		while(!frontera.isEmpty() && !solucion) {
 			nodo = frontera.poll();
 			if (problema.getDestino().equals(nodo.getEstado())) {
 				solucion=true;
-			}else if(visitado.contains(nodo.getEstado()) && nodo.getProfundidad()<profundidad) {
-				visitado.add(nodo.getEstado());
-				expandir_nodo(problema, nodo, st, hijos);
+			}else if( !casillas_visitadas.contains(nodo.getEstado()) && nodo.getProfundidad()<profundidad_max) {
+				casillas_visitadas.add(nodo.getEstado());
+				expandir_nodo(problema, nodo, st, hijos, profundidad_max);
 				while (!hijos.isEmpty()) {
 					frontera.add(hijos.poll());
 				}
 			}
 		}
+
 		if (solucion) {
 			while (nodo.getPadre()!=null) {
 				camino.add(nodo.getEstado());
 				nodo=nodo.getPadre();
 			}
-		}else throw new NoSolutionException();
+			camino.add(nodo.getEstado());
+			while (!frontera.isEmpty()) {
+				casillas_frontera.add(frontera.poll().getEstado());
+			}
+		}else {
+			throw new NoSolutionException();
+		}
 		return camino;
-
 	}
-	public static int calcular_valor(String st, Nodo nodo) {
+	public static int calcular_valor(String st, Nodo nodo, int profundidad_max) {
 		int valor=0;
 		switch (st) {
 		case "BREADTH":
@@ -552,7 +684,7 @@ public class Principal implements Constantes {
 			break;
 		case "DEPTH":
 			valor=nodo.getProfundidad();
-			valor*=-1;
+			valor=profundidad_max-valor;
 			break;
 		case "UNIFORM":
 			valor=nodo.getCosto();
@@ -566,8 +698,7 @@ public class Principal implements Constantes {
 		}
 		return valor;
 	}
-	public static void expandir_nodo (Problema problema, Nodo nodo, String st, LinkedList<Nodo> hijos){
-		LinkedList<Nodo> nodos = new LinkedList<Nodo>();
+	public static void expandir_nodo (Problema problema, Nodo nodo, String st, LinkedList<Nodo> hijos, int profundidad_max){
 		Sucesor sucesores = new Sucesor();
 		Nodo hijo;
 		sucesores = problema.crearSucesor(nodo, problema.getLaberinto());
@@ -579,8 +710,8 @@ public class Principal implements Constantes {
 			hijo.setProfundidad(nodo.getProfundidad()+1);
 			hijo.setCosto(nodo.getCosto()+sucesores.getNodos().get(i).getEstado().getValor()+1);
 			hijo.setHeuristica(calcular_heuristica(problema, hijo));
-			hijo.setValor(calcular_valor(st, hijo));
-			nodos.add(hijo);
+			hijo.setValor(calcular_valor(st, hijo, profundidad_max));
+			hijos.add(hijo);
 		}
 	}
 }

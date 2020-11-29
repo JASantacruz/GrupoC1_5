@@ -1,16 +1,16 @@
-package Sesion1;
+package Practica_Laberinto;
 
 public class Problema implements Constantes{
 
 	private Laberinto laberinto;
 	private Casilla origen;
 	private Casilla destino;
-	
 	public Problema() {
-
+		this.origen = new Casilla();
+		this.destino = new Casilla();
+		this.laberinto = new Laberinto();
 	}
 	public Problema(Laberinto laberinto, Casilla origen, Casilla destino) {
-		super();
 		setLaberinto(laberinto);
 		setOrigen(origen);
 		setDestino(destino);
