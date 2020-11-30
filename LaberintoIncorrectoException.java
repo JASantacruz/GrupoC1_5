@@ -1,6 +1,5 @@
-package sesion_1;
+package Practica_Laberinto;
 
-@SuppressWarnings("serial")
 public class LaberintoIncorrectoException extends Exception{
 
 	public LaberintoIncorrectoException(String celda_error) {

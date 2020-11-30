@@ -1,4 +1,4 @@
-package sesion_1;
+package Practica_Laberinto;
 
 public class Problema implements Constantes{
 
@@ -34,32 +34,32 @@ public class Problema implements Constantes{
 		this.destino = destino;
 	}
 
-	public static Sucesor crearSucesor(Nodo nodo,Laberinto lab) {
+	public static Sucesor crear_sucesor(Nodo nodo,Laberinto lab) {
 		Sucesor s = new Sucesor(nodo.getEstado());
 		for(int i =0;i<nodo.getEstado().getParedes().length;i++) {
 			if(nodo.getEstado().get_pared(i)==true)
 				switch(i) {
 				case 0:
 					s.getMov().add(MOV_N);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_N));
+					s.getNodos().add(anyadir_nodo(nodo, lab,MOV_N));
 					break;
 				case 1:
 					s.getMov().add(MOV_E);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_E));
+					s.getNodos().add(anyadir_nodo(nodo, lab,MOV_E));
 					break;
 				case 2:
 					s.getMov().add(MOV_S);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_S));
+					s.getNodos().add(anyadir_nodo(nodo, lab,MOV_S));
 					break;
 				case 3:
 					s.getMov().add(MOV_O);
-					s.getNodos().add(anyadirNodo(nodo, lab,MOV_O));
+					s.getNodos().add(anyadir_nodo(nodo, lab,MOV_O));
 					break;
 				}
 		}
 		return s;
 	}
-	public static Nodo anyadirNodo(Nodo nodo,Laberinto lab,String mov) {
+	public static Nodo anyadir_nodo(Nodo nodo,Laberinto lab,String mov) {
 		Casilla aux = new Casilla();
 		Nodo hijo = new Nodo(nodo);
 		switch(mov) {

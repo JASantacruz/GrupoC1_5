@@ -1,6 +1,5 @@
-package sesion_1;
+package Practica_Laberinto;
 
-@SuppressWarnings("serial")
 public class NoSolutionException extends Exception{
 
 	public NoSolutionException() {

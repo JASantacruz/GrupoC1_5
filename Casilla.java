@@ -1,4 +1,4 @@
-package sesion_1;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +80,8 @@ public class Casilla {
 		
 		return aux;
 	}
+	
+	
 	
 	public String toString() {
 		return "{"+get_posicion()[0]+","+get_posicion()[1]+"}: "+get_pared(0)+", "+get_pared(1)+", "+get_pared(2)+", "+get_pared(3)+")";
