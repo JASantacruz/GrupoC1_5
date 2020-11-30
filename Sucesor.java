@@ -1,10 +1,7 @@
-package sesion_1;
+package Practica_Laberinto;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
-@SuppressWarnings("unused")
 public class Sucesor {
 	private List<String> mov;
 	private Casilla estado;
