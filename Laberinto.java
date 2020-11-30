@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package sesion_1;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,8 +9,8 @@ public class Laberinto implements Constantes {
 	private int columnas;
 	private int filas;
 	private int max_n;
-	private List<String>id_move = new ArrayList();
-	private List<int[]>  move = new ArrayList();
+	private List<String>id_move = new ArrayList<String>();
+	private List<int[]>  move = new ArrayList<int[]>();
 	private Casilla [][] listaCasillas;
 
 	public Laberinto() {

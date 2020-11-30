@@ -1,4 +1,4 @@
-package Practica_Laberinto;
+package sesion_1;
 
 public class Problema implements Constantes{
 
@@ -81,7 +81,6 @@ public class Problema implements Constantes{
 			break;
 		}
 		hijo.setAccion(mov);
-		//hijo.setProfundidad(nodo.getProfundidad()+1);
 		hijo.setCosto(nodo.getCosto()+COSTE);
 		return hijo;
 	}
