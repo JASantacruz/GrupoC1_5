@@ -1,6 +1,4 @@
-package Practica_Laberinto;
-
-import java.util.List;
+package sesion_1;
 
 public interface Constantes {
 	public final static int COSTE = 1;
