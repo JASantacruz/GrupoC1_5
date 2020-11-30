@@ -90,7 +90,7 @@ public class Principal implements Constantes {
 		System.out.println("Por favor, elija una estrategia:\n");
 		System.out.println("1- Anchura.\n2- Profundidad acotada (1000000).\n3- Coste uniforme.\n4- Voraz.\n5- A*.\n6- Salir");
 	}
-	
+
 	public static String menu_estrategia() {
 		int opcion;
 		String estrategia="";
@@ -126,7 +126,7 @@ public class Principal implements Constantes {
 			return "";
 		}
 	}
-	
+
 	public static int numero_filas_columnas (String filas_o_columnas) {
 		int numero=0;
 		boolean valido = false;
@@ -144,7 +144,7 @@ public class Principal implements Constantes {
 		}while(!valido);
 		return numero;
 	}
-	
+
 	public static void crear_matriz(int n_filas, int n_columnas, Casilla[][] matriz, Problema problema) throws IOException, LaberintoIncorrectoException {
 		n_filas=numero_filas_columnas("filas");	
 		n_columnas=numero_filas_columnas("columnas");
@@ -308,7 +308,7 @@ public class Principal implements Constantes {
 			return 1+direccion_i;
 		}
 	}
-	
+
 	public static void crear_imagen(Laberinto laberinto) throws IOException {
 		int alto_casilla = 20; 
 		int ancho_casilla = 20; 
@@ -368,7 +368,7 @@ public class Principal implements Constantes {
 		int ancho_casilla = 20; 
 		int width = ancho_casilla*laberinto.getColumnas();
 		int height = alto_casilla*laberinto.getFilas();
-		
+
 		BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 		Graphics2D lab = img.createGraphics();
 		lab.setColor(Color.white);
@@ -449,7 +449,7 @@ public class Principal implements Constantes {
 		JSONObject json3;
 		LinkedList<LinkedList<Integer>>auxiliar = new LinkedList<LinkedList<Integer>>();
 		String aux = "laberinto"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json";
-		
+
 		for(int i = 0;i<lab.getListaCasillas().length;i++) {
 			for(int j = 0;j<lab.getListaCasillas()[0].length;j++) {
 				json3 = new JSONObject(); 
@@ -491,16 +491,24 @@ public class Principal implements Constantes {
 		JSONParser jparse = new JSONParser();
 		String jason = "";
 		String linea, rutaMaze, inicio, destino;
+		int cont =0;
 		File archivo = new File (ruta);
 		FileReader fr = new FileReader (archivo);
 		BufferedReader br = new BufferedReader(fr);
+		for (int x=ruta.length()-1;x>=0;x--) {
+			if(ruta.charAt(x)==('\\')) {
+				break;
+			}
+			cont++;
+		}  
+		rutaMaze = ruta.substring(0,ruta.length()-1-cont)+"\\";
 		while ((linea = br.readLine()) != null) {
 			jason += linea;
 		}
 		json = (JSONObject)jparse.parse(jason);
 		inicio = (String)json.get("INITIAL"); 
 		destino = (String)json.get("OBJETIVE");
-		rutaMaze = (String)json.get("MAZE");
+		rutaMaze += (String)json.get("MAZE");
 		importar_laberinto(problema,rutaMaze,inicio,destino);		
 	}
 	public static void importar_laberinto(Problema problema, String ruta, String inicio, String destino) throws IOException, ParseException {
@@ -516,7 +524,7 @@ public class Principal implements Constantes {
 		File archivo = new File (ruta);
 		FileReader fr = new FileReader (archivo);
 		BufferedReader br = new BufferedReader(fr);
-		
+
 		while ((linea = br.readLine()) != null) {
 			jason += linea;
 		}
@@ -711,5 +719,5 @@ public class Principal implements Constantes {
 		}
 		return valor;
 	}
-	
+
 }
