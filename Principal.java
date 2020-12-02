@@ -25,7 +25,7 @@ public class Principal implements Constantes {
 		LinkedList<Casilla> casillas_solucion = new LinkedList<Casilla>();
 		LinkedList<Casilla> casillas_frontera = new LinkedList<Casilla>();
 		LinkedList<Casilla> casillas_visitadas = new LinkedList<Casilla>();
-
+		LinkedList<Nodo> nodos_solucion = new LinkedList<Nodo>();
 		do {
 			do {
 				mostrar_opciones();
@@ -58,11 +58,13 @@ public class Principal implements Constantes {
 					crear_imagen(problema.getLaberinto());
 					estrategia = menu_estrategia();
 					while(!estrategia.equals("EXIT")) {
-						casillas_solucion = algoritmo_busqueda(problema, 1000000, estrategia, casillas_frontera, casillas_visitadas);
+						casillas_solucion = algoritmo_busqueda(problema, 1000000, estrategia, casillas_frontera, casillas_visitadas, nodos_solucion);
 						pintar_laberinto_debug(casillas_solucion, casillas_frontera, casillas_visitadas, problema.getLaberinto(), estrategia);
+						guardar_solucion(nodos_solucion, problema.getLaberinto(), estrategia);
 						casillas_frontera = new LinkedList<Casilla>();
 						casillas_solucion = new LinkedList<Casilla>();
 						casillas_visitadas = new LinkedList<Casilla>();
+						nodos_solucion = new LinkedList<Nodo>();
 
 						estrategia = menu_estrategia();
 					}					
@@ -322,10 +324,6 @@ public class Principal implements Constantes {
 		for(int i = 0; i < laberinto.getFilas(); i++) {
 			for(int j = 0; j < laberinto.getColumnas(); j++) {
 				switch(laberinto.getListaCasillas()[i][j].getValor()) {
-				case 0:
-					lab.setColor(new Color(184, 184, 184));
-					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
-					break;
 				case 1:
 					lab.setColor(new Color(192, 128, 128));
 					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
@@ -360,7 +358,7 @@ public class Principal implements Constantes {
 			}
 		}
 		lab.dispose();
-		File file = new File("laberinto"+laberinto.getFilas()+"x"+laberinto.getColumnas()+".jpg");
+		File file = new File("puzzle_loop_"+laberinto.getFilas()+"x"+laberinto.getColumnas()+".jpg");
 		ImageIO.write(img, "jpg", file);
 	}
 	private static void pintar_laberinto_debug(LinkedList<Casilla> casillas_solucion, LinkedList<Casilla> casillas_frontera, LinkedList<Casilla> casillas_visitadas, Laberinto laberinto, String estrategia) throws IOException {
@@ -376,10 +374,6 @@ public class Principal implements Constantes {
 		for(int i = 0; i < laberinto.getFilas(); i++) {
 			for(int j = 0; j < laberinto.getColumnas(); j++) {
 				switch(laberinto.getListaCasillas()[i][j].getValor()) {
-				case 0:
-					lab.setColor(new Color(184, 184, 184));
-					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
-					break;
 				case 1:
 					lab.setColor(new Color(192, 128, 128));
 					lab.fillRect(j*ancho_casilla, i*alto_casilla, ancho_casilla, alto_casilla);
@@ -438,7 +432,7 @@ public class Principal implements Constantes {
 		}
 
 		lab.dispose();
-		File file = new File("solution_"+laberinto.getFilas()+"x"+laberinto.getColumnas()+"_"+estrategia+".jpg");
+		File file = new File("solution_"+laberinto.getFilas()+"x"+laberinto.getColumnas()+"_"+estrategia+"_20.jpg");
 		ImageIO.write(img, "jpg", file);
 	}
 
@@ -448,7 +442,7 @@ public class Principal implements Constantes {
 		JSONObject json2 = new JSONObject(); 
 		JSONObject json3;
 		LinkedList<LinkedList<Integer>>auxiliar = new LinkedList<LinkedList<Integer>>();
-		String aux = "laberinto"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json";
+		String aux = "problema_"+lab.getFilas()+"x"+lab.getColumnas()+"_maze.json";
 
 		for(int i = 0;i<lab.getListaCasillas().length;i++) {
 			for(int j = 0;j<lab.getListaCasillas()[0].length;j++) {
@@ -481,11 +475,33 @@ public class Principal implements Constantes {
 		json.put("INITIAL", "("+lab.getListaCasillas()[0][0].get_posicion()[0]+", "+lab.getListaCasillas()[0][0].get_posicion()[1]+")");
 		json.put("OBJETIVE", "("+lab.getListaCasillas()[lab.getListaCasillas().length-1][lab.getListaCasillas()[0].length-1].get_posicion()[0]+", "+lab.getListaCasillas()[lab.getListaCasillas().length-1][lab.getListaCasillas()[0].length-1].get_posicion()[1]+")");
 		json.put("MAZE", ruta);
-		try(PrintWriter puntoJson = new PrintWriter("laberinto"+lab.getFilas()+"x"+lab.getColumnas()+".json")){
+		try(PrintWriter puntoJson = new PrintWriter("problema_"+lab.getFilas()+"x"+lab.getColumnas()+".json")){
 			puntoJson.println(json);
 		}
 	}
-
+	public static void guardar_solucion(LinkedList<Nodo> nodos_solucion, Laberinto lab, String estrategia) {
+		FileWriter archivo = null;
+        PrintWriter pw = null;
+        Nodo aux;
+        try
+        {
+            archivo = new FileWriter("solution_"+lab.getFilas()+"x"+lab.getColumnas()+"_"+estrategia+".txt");
+            pw = new PrintWriter(archivo);
+            aux = nodos_solucion.get(nodos_solucion.size()-1);
+            pw.println("[id_nodo][costo, estado, id_nodo_padre, accion, profundidad, heuristica, valor]");
+            pw.println("["+aux.getID()+"]["+aux.getCosto()+", ("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+"), "
+            		+ "None, None, "+aux.getProfundidad()+", "+aux.getHeuristica()+", "+aux.getValor()+"]");
+            for (int i = nodos_solucion.size()-2; i >= 0; i--) {
+                aux = nodos_solucion.get(i);
+                pw.println("["+aux.getID()+"]["+aux.getCosto()+", ("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+"), "
+                		+ aux.getPadre().getID()+", "+ aux.getAccion()+", "+aux.getProfundidad()+", "+aux.getHeuristica()+", "+aux.getValor()+"]");
+            }
+            archivo.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+	}
+	
 	public static void importar_problema(Problema problema, String ruta) throws IOException, ParseException {
 		JSONObject json = null;
 		JSONParser jparse = new JSONParser();
@@ -632,7 +648,7 @@ public class Principal implements Constantes {
 			}
 		}
 	}
-	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad_max, String st, LinkedList<Casilla> casillas_frontera, LinkedList<Casilla> casillas_visitadas) throws NoSolutionException {
+	public static LinkedList<Casilla> algoritmo_busqueda (Problema problema, int profundidad_max, String st, LinkedList<Casilla> casillas_frontera, LinkedList<Casilla> casillas_visitadas, LinkedList<Nodo> nodos_solucion) throws NoSolutionException {
 
 		LinkedList<Nodo> hijos = new LinkedList<Nodo>();
 		LinkedList<Casilla> camino = new LinkedList<Casilla>();
@@ -667,9 +683,11 @@ public class Principal implements Constantes {
 		if (solucion) {
 			while (nodo.getPadre()!=null) {
 				camino.add(nodo.getEstado());
+				nodos_solucion.add(nodo);
 				nodo=nodo.getPadre();
 			}
 			camino.add(nodo.getEstado());
+			nodos_solucion.add(nodo);
 			while (!frontera.isEmpty()) {
 				casillas_frontera.add(frontera.poll().getEstado());
 			}
