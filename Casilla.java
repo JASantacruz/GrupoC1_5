@@ -3,7 +3,7 @@ package Practica_Laberinto;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Casilla {
+public class Casilla{
 	private boolean[] paredes;
 	private int valor;
 	private int[] posicion;
@@ -67,8 +67,10 @@ public class Casilla {
 		return posicion;
 	}
 	
-	public boolean equals(Casilla casilla) {
-		return casilla.get_posicion()[0]==get_posicion()[0] && casilla.get_posicion()[1]==get_posicion()[1];
+	@Override
+	public boolean equals(Object casillaObjeto) {
+		Casilla casilla = (Casilla) casillaObjeto;
+		return casilla.get_posicion()[0]==this.get_posicion()[0] && casilla.get_posicion()[1]==this.get_posicion()[1];
 	}
 	
 	public List<Boolean> cambiarArrayALista() {

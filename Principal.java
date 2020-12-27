@@ -113,7 +113,7 @@ public class Principal implements Constantes {
 	public static String traducir_estrategia(int opcion) {
 		switch(opcion) {
 		case 1:
-			return "BREATH";
+			return "BREADTH";
 		case 2:
 			return "DEPTH";
 		case 3:
@@ -481,27 +481,27 @@ public class Principal implements Constantes {
 	}
 	public static void guardar_solucion(LinkedList<Nodo> nodos_solucion, Laberinto lab, String estrategia) {
 		FileWriter archivo = null;
-        PrintWriter pw = null;
-        Nodo aux;
-        try
-        {
-            archivo = new FileWriter("solution_"+lab.getFilas()+"x"+lab.getColumnas()+"_"+estrategia+".txt");
-            pw = new PrintWriter(archivo);
-            aux = nodos_solucion.get(nodos_solucion.size()-1);
-            pw.println("[id_nodo][costo, estado, id_nodo_padre, accion, profundidad, heuristica, valor]");
-            pw.println("["+aux.getID()+"]["+aux.getCosto()+", ("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+"), "
-            		+ "None, None, "+aux.getProfundidad()+", "+aux.getHeuristica()+", "+aux.getValor()+"]");
-            for (int i = nodos_solucion.size()-2; i >= 0; i--) {
-                aux = nodos_solucion.get(i);
-                pw.println("["+aux.getID()+"]["+aux.getCosto()+", ("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+"), "
-                		+ aux.getPadre().getID()+", "+ aux.getAccion()+", "+aux.getProfundidad()+", "+aux.getHeuristica()+", "+aux.getValor()+"]");
-            }
-            archivo.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+		PrintWriter pw = null;
+		Nodo aux;
+		try
+		{
+			archivo = new FileWriter("solution_"+lab.getFilas()+"x"+lab.getColumnas()+"_"+estrategia+".txt");
+			pw = new PrintWriter(archivo);
+			aux = nodos_solucion.get(nodos_solucion.size()-1);
+			pw.println("[id_nodo][costo, estado, id_nodo_padre, accion, profundidad, heuristica, valor]");
+			pw.println("["+aux.getID()+"]["+aux.getCosto()+", ("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+"), "
+					+ "None, None, "+aux.getProfundidad()+", "+aux.getHeuristica()+", "+aux.getValor()+"]");
+			for (int i = nodos_solucion.size()-2; i >= 0; i--) {
+				aux = nodos_solucion.get(i);
+				pw.println("["+aux.getID()+"]["+aux.getCosto()+", ("+aux.getEstado().get_posicion()[0]+","+aux.getEstado().get_posicion()[1]+"), "
+						+ aux.getPadre().getID()+", "+ aux.getAccion()+", "+aux.getProfundidad()+", "+aux.getHeuristica()+", "+aux.getValor()+"]");
+			}
+			archivo.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
-	
+
 	public static void importar_problema(Problema problema, String ruta) throws IOException, ParseException {
 		JSONObject json = null;
 		JSONParser jparse = new JSONParser();
@@ -527,6 +527,8 @@ public class Principal implements Constantes {
 		rutaMaze += (String)json.get("MAZE");
 		importar_laberinto(problema,rutaMaze,inicio,destino);		
 	}
+
+
 	public static void importar_laberinto(Problema problema, String ruta, String inicio, String destino) throws IOException, ParseException {
 		String jason = "",aux1 = "",aux4 = "";
 		int[]aux2 = new int[2];
@@ -653,6 +655,7 @@ public class Principal implements Constantes {
 		LinkedList<Nodo> hijos = new LinkedList<Nodo>();
 		LinkedList<Casilla> camino = new LinkedList<Casilla>();
 		PriorityQueue<Nodo> frontera = new PriorityQueue<Nodo>();
+		PriorityQueue<Nodo> auxiliarFrontera = new PriorityQueue<Nodo>();
 
 		boolean solucion=false;
 
@@ -693,7 +696,7 @@ public class Principal implements Constantes {
 			}
 		}else {
 			throw new NoSolutionException();
-		}
+		}	
 		return camino;
 	}
 	public static void expandir_nodo (Problema problema, Nodo nodo, String st, LinkedList<Nodo> hijos, int profundidad_max){
@@ -712,18 +715,22 @@ public class Principal implements Constantes {
 			hijos.add(hijo);
 		}
 	}
-	public static int calcular_heuristica(Problema problema, Nodo nodo) {
-		return Math.abs(nodo.getEstado().get_posicion()[0]-problema.getDestino().get_posicion()[0]) + Math.abs(nodo.getEstado().get_posicion()[1]-problema.getDestino().get_posicion()[1]);
+	public static double calcular_heuristica(Problema problema, Nodo nodo) {
+		int fila = nodo.getEstado().get_posicion()[0];
+		int fila_final = problema.getDestino().get_posicion()[0];
+		int columna = nodo.getEstado().get_posicion()[1];
+		int columna_final = problema.getDestino().get_posicion()[1];
+		return Math.abs(fila-fila_final) + Math.abs(columna-columna_final);
 	}	
-	public static int calcular_valor(String st, Nodo nodo, int profundidad_max) {
-		int valor=0;
+	public static double calcular_valor(String st, Nodo nodo, int profundidad_max) {
+		double valor=0;
 		switch (st) {
 		case "BREADTH":
-			valor=nodo.getID();
+			valor=nodo.getProfundidad();
 			break;
 		case "DEPTH":
 			valor=nodo.getProfundidad();
-			valor=profundidad_max-valor;
+			valor=1/(valor+1);
 			break;
 		case "UNIFORM":
 			valor=nodo.getCosto();

@@ -4,10 +4,10 @@ public class Nodo implements Comparable <Nodo> {
 	private static int count = 0;
 	private int id;
 	private Casilla estado;
-	private int valor;
+	private double valor;
 	private int profundidad;
 	private int costo;
-	private int heuristica;
+	private double heuristica;
 	private String accion;
 	private Nodo padre;
 	
@@ -20,6 +20,14 @@ public class Nodo implements Comparable <Nodo> {
 	
 	public Nodo(Nodo padre){
 		this.id=count++;
+		this.valor = 0;
+		this.profundidad = padre.getProfundidad()+1;
+		this.padre=padre;
+	}
+	
+	public Nodo(Nodo padre, boolean flag){
+		//Este constructor se usa cuando no queremos incrementar el id (para poder utilizar nodos auxiliares sin afectar a dicha variable)
+		this.id = -1;
 		this.valor = 0;
 		this.profundidad = padre.getProfundidad()+1;
 		this.padre=padre;
@@ -42,11 +50,11 @@ public class Nodo implements Comparable <Nodo> {
 		this.estado = estado;
 	}
 	
-	public int getValor() {
+	public double getValor() {
 		return valor;
 	}
 	
-	public void setValor(int valor) {
+	public void setValor(double valor) {
 		this.valor = valor;
 	}
 	
@@ -66,11 +74,11 @@ public class Nodo implements Comparable <Nodo> {
 		this.costo = costo;
 	}
 	
-	public int getHeuristica() {
+	public double getHeuristica() {
 		return heuristica;
 	}
 	
-	public void setHeuristica(int heuristica) {
+	public void setHeuristica(double heuristica) {
 		this.heuristica = heuristica;
 	}
 	
@@ -99,20 +107,27 @@ public class Nodo implements Comparable <Nodo> {
 	@Override
 	public int compareTo(Nodo n) {
 		int r=0;
-		if(n.getValor()<getValor()) {
+		if(n.getValor()<this.getValor()) {
 			r=+1;
-		}else if(n.getValor()> getValor()) {
+		}else if(n.getValor()> this.getValor()) {
 			r=-1;
-		}else if(n.getValor()== getValor()) {
-			if(n.getEstado().get_posicion()[0]> getEstado().get_posicion()[0]) {
+		}else if(n.getValor()== this.getValor()) {
+			if(n.getEstado().get_posicion()[0]> this.getEstado().get_posicion()[0]) {
 				r=-1;
-			}else if(n.getEstado().get_posicion()[0]< getEstado().get_posicion()[0]) {
+			}else if(n.getEstado().get_posicion()[0] < this.getEstado().get_posicion()[0]) {
 				r=+1;
-			}else if(n.getEstado().get_posicion()[0]== getEstado().get_posicion()[0]) {
-				if(n.getEstado().get_posicion()[1]> getEstado().get_posicion()[1]) {
+			}else if(n.getEstado().get_posicion()[0]== this.getEstado().get_posicion()[0]) {
+				if(n.getEstado().get_posicion()[1]> this.getEstado().get_posicion()[1]) {
 					r=-1;
-				}else if(n.getEstado().get_posicion()[1]< getEstado().get_posicion()[1]) {
+				}else if(n.getEstado().get_posicion()[1]< this.getEstado().get_posicion()[1]) {
 					r=+1;
+				}else if(n.getEstado().get_posicion()[1]==this.getEstado().get_posicion()[1]) {
+					if(n.getID() > this.getID()) {
+						r=-1;
+					}
+					else if(n.getID() < this.getID()) {
+						r=+1;
+					}
 				}
 			}
 		}
