@@ -61,7 +61,7 @@ public class Problema implements Constantes{
 	}
 	public static Nodo anyadir_nodo(Nodo nodo,Laberinto lab,String mov) {
 		Casilla aux = new Casilla();
-		Nodo hijo = new Nodo(nodo);
+		Nodo hijo = new Nodo(nodo, false);
 		switch(mov) {
 		case MOV_N:
 			aux = lab.getListaCasillas()[nodo.getEstado().get_posicion()[0]-1][nodo.getEstado().get_posicion()[1]];
